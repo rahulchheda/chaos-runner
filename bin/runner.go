@@ -3,14 +3,28 @@ package main
 import (
 	"time"
 
-	"k8s.io/klog"
-
+	"fmt"
 	"github.com/litmuschaos/chaos-runner/pkg/utils"
 	"github.com/litmuschaos/chaos-runner/pkg/utils/analytics"
+	"k8s.io/klog"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-func main() {
+func handleSig(ch chan os.Signal, sigCatcher *bool) {
+	sig := <-ch
+	*sigCatcher = true
+	fmt.Printf("Sig Signal Caught: %v \n Value of SIGCATCHER: %v \n", sig, sigCatcher)
+	return
+}
 
+var sigCatcher = false
+
+func main() {
+	sig := make(chan os.Signal)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	go handleSig(sig, &sigCatcher)
 	engineDetails := utils.EngineDetails{}
 	clients := utils.ClientSets{}
 
